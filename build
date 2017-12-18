@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Build the client
-stack build --stack-yaml=frontend/stack.yaml
+cd frontend && ./build
 
 # Copy over the javascript
-# rm -f server/static/all.js
-# cp $(stack path --stack-yaml=client/stack.yaml --local-install-root)/bin/client.jsexe/all.js server/static/all.js
+rm ../backend/static/all.js
+cp $(stack path --local-install-root)/bin/frontend.jsexe/all.js ../backend/static/all.js
+cd ..
 
 # Build the server
-# stack build --stack-yaml=server/stack.yaml
+cd backend && ./build && cd ..

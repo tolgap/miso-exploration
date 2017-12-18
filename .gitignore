@@ -1,1 +1,6 @@
 .stack-work/
+dist/
+backend/static/*
+!backend/static/.keep
+
+cabal-helper*/
