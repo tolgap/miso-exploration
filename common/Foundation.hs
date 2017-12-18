@@ -12,6 +12,7 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE BangPatterns          #-}
 
 module Foundation where
 
@@ -27,6 +28,7 @@ import           Miso.String         (MisoString)
 import qualified Miso.String         as S
 import           Servant.API
 import           Servant.Utils.Links
+import           System.IO.Unsafe    (unsafePerformIO)
 
 data Msg
   = NoOp
@@ -69,6 +71,10 @@ instance FromJSON Entry
 -- Currently doing 1 route, and handling changes inside Miso.
 type ClientRoutes = Home
 type Home = View Msg
+
+debugLog :: (Show a) => a -> a
+debugLog x =
+    let !_ = unsafePerformIO (print x) in x
 
 initialModel :: [Entry] -> Model
 initialModel initialEntries = Model
