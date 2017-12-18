@@ -2,5 +2,7 @@
 dist/
 backend/static/*
 !backend/static/.keep
+db/*
+!db/.keep
 
 cabal-helper*/

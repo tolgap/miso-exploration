@@ -10,15 +10,16 @@
 
 module Main(main) where
 
-import           Data.Aeson   hiding (Object)
+import           Data.Aeson                    hiding (Object)
 import           Data.Bool
-import qualified Data.Map     as M
+import qualified Data.Map                      as M
 import           Data.Monoid
 import           Foundation
 import           GHC.Generics
-import           Miso
-import           Miso.String  (MisoString)
-import qualified Miso.String  as S
+import           JavaScript.Web.XMLHttpRequest
+import           Miso                          hiding (defaultOptions)
+import           Miso.String                   (MisoString)
+import qualified Miso.String                   as S
 
 instance HasURI Model where
     lensURI = uri
@@ -34,7 +35,7 @@ newEntry desc eid = Entry
 
 main :: IO ()
 main = miso App
-    { initialAction = NoOp
+    { initialAction = FetchEntries
     , model = initialModel
     , update = updateModel
     , view = viewModel
@@ -96,6 +97,13 @@ updateModel (CheckAll isCompleted) model@Model{..} =
 updateModel (ChangeVisibility v) model =
   noEff model { _visibility = v }
 
+updateModel FetchEntries model =
+    model <# do
+        EntriesResult <$> getEntries
+
+updateModel (EntriesResult newEntries) model =
+    noEff model { _entries = newEntries }
+
 filterMap :: [a] -> (a -> Bool) -> (a -> a) -> [a]
 filterMap xs predicate f = go' xs
   where
@@ -103,3 +111,18 @@ filterMap xs predicate f = go' xs
     go' (y:ys)
      | predicate y = f y : go' ys
      | otherwise   = y : go' ys
+
+getEntries :: IO [Entry]
+getEntries = do
+    Just resp <- contents <$> xhrByteString req
+    case eitherDecodeStrict resp :: Either String [Entry] of
+        Left s  -> error s
+        Right j -> pure j
+    where
+        req = Request { reqMethod = GET
+                      , reqURI = S.pack "/entries"
+                      , reqLogin = Nothing
+                      , reqHeaders = []
+                      , reqWithCredentials = False
+                      , reqData = NoData
+                      }

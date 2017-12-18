@@ -70,7 +70,7 @@ app pool =
                 return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries
 
 mkApp = do
-    pool <- runStderrLoggingT $ createSqlitePool ":memory:" 1
+    pool <- runStderrLoggingT $ createSqlitePool "db/miso-test.sqlite3" 1
     runSqlPool (runMigration migrateAll) pool
     return $ app pool
 

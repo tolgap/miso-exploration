@@ -40,6 +40,8 @@ data Msg
   | Check Int Bool
   | CheckAll Bool
   | ChangeVisibility MisoString
+  | FetchEntries
+  | EntriesResult [Entry]
    deriving Show
 
 data Model = Model
