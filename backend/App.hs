@@ -61,13 +61,17 @@ app pool =
         static =
             serveDirectory "backend/static"
 
-        serverRouteHandlers =
-            pure $ HtmlPage $ viewModel initialModel
+        serverRouteHandlers = do
+            entries <- liftIO $ getEntries pool
+            pure $ HtmlPage $ viewModel (initialModel entries)
 
         entryHandlers =
-            liftIO $ flip runSqlPersistMPool pool $ do
-                entries <- selectList [] []
-                return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries
+            liftIO $ getEntries pool
+
+getEntries pool =
+    flip runSqlPersistMPool pool $ do
+        entries <- selectList [] []
+        return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries
 
 mkApp = do
     pool <- runStderrLoggingT $ createSqlitePool "db/miso-test.sqlite3" 1

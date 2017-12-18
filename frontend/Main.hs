@@ -17,7 +17,7 @@ import           Data.Monoid
 import           Foundation
 import           GHC.Generics
 import           JavaScript.Web.XMLHttpRequest
-import           Miso                          hiding (defaultOptions)
+import           Miso
 import           Miso.String                   (MisoString)
 import qualified Miso.String                   as S
 
@@ -36,7 +36,7 @@ newEntry desc eid = Entry
 main :: IO ()
 main = miso App
     { initialAction = FetchEntries
-    , model = initialModel
+    , model = initialModel []
     , update = updateModel
     , view = viewModel
     , events = defaultEvents
@@ -102,7 +102,7 @@ updateModel FetchEntries model =
         EntriesResult <$> getEntries
 
 updateModel (EntriesResult newEntries) model =
-    noEff model { _entries = newEntries }
+    noEff $ initialModel newEntries
 
 filterMap :: [a] -> (a -> Bool) -> (a -> a) -> [a]
 filterMap xs predicate f = go' xs

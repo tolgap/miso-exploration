@@ -70,9 +70,9 @@ instance FromJSON Entry
 type ClientRoutes = Home
 type Home = View Msg
 
-initialModel :: Model
-initialModel = Model
-  { _entries = []
+initialModel :: [Entry] -> Model
+initialModel initialEntries = Model
+  { _entries = debugLog initialEntries
   , _visibility = S.pack "All"
   , _field = mempty
   , _uid = 0
