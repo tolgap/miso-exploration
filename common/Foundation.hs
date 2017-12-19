@@ -78,7 +78,7 @@ debugLog x =
 
 initialModel :: [Entry] -> Model
 initialModel initialEntries = Model
-  { _entries = debugLog initialEntries
+  { _entries = initialEntries
   , _visibility = S.pack "All"
   , _field = mempty
   , _uid = 0
