@@ -34,15 +34,17 @@ newEntry desc eid = Entry
   }
 
 main :: IO ()
-main = miso App
-    { initialAction = FetchEntries
-    , model = initialModel []
-    , update = updateModel
-    , view = viewModel
-    , events = defaultEvents
-    , subs = []
-    , mountPoint = Nothing
-    }
+main = do
+    initialEntries <- getEntries
+    miso App
+        { initialAction = NoOp
+        , model = initialModel initialEntries
+        , update = updateModel
+        , view = viewModel
+        , events = defaultEvents
+        , subs = []
+        , mountPoint = Nothing
+        }
 
 updateModel :: Msg -> Model -> Effect Msg Model
 updateModel NoOp m = noEff m
