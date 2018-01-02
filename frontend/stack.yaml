@@ -9,7 +9,6 @@ setup-info:
         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
 packages:
   - '.'
-  - '../common'
   - '../../ghcjs-base'
 
 extra-deps:

@@ -7,13 +7,13 @@ cabal-version:       >=1.10
 
 executable backend
     main-is: Main.hs
-    hs-source-dirs: .
+    hs-source-dirs: ., ../common
     other-modules:
         ApiType,
         App,
-        Models
+        Models,
+        Foundation
     build-depends:
-        miso-test-common,
         aeson,
         base < 5,
         containers,
