@@ -14,6 +14,7 @@ executable frontend
         aeson == 1.1.1.0,
         base >= 4.7 && < 5,
         ghcjs-base,
+        bytestring,
         containers,
         lens,
         servant,

@@ -12,6 +12,8 @@ module Main(main) where
 
 import           Data.Aeson                    hiding (Object)
 import           Data.Bool
+import           Data.ByteString.Lazy.Char8    (unpack)
+import qualified Data.JSString                 as JSS
 import qualified Data.Map                      as M
 import           Data.Monoid
 import           Foundation
@@ -51,11 +53,14 @@ updateModel NoOp m = noEff m
 updateModel (CurrentTime n) m =
   m <# (print n >> pure NoOp)
 updateModel Add model@Model{..} =
-  noEff model {
-    _uid = _uid + 1
-  , _field = mempty
-  , _entries = _entries <> [ newEntry _field _uid | not $ S.null _field ]
-  }
+    model
+        {
+        _uid = _uid + 1
+        , _field = mempty
+        , _entries = _entries <> [ newEntry _field _uid ]
+        } <# do
+            NoOp <$ postEntry (newEntry _field _uid)
+
 updateModel (UpdateField str) model = noEff model { _field = str }
 updateModel (EditingEntry id' isEditing) model@Model{..} =
   model { _entries = newEntries } <# do
@@ -127,4 +132,19 @@ getEntries = do
                       , reqHeaders = []
                       , reqWithCredentials = False
                       , reqData = NoData
+                      }
+
+postEntry :: Entry -> IO ()
+postEntry entry = do
+    Just resp <- contents <$> xhrByteString req
+    case eitherDecodeStrict resp :: Either String () of
+        Left s  -> error s
+        Right _ -> pure ()
+    where
+        req = Request { reqMethod = POST
+                      , reqURI = S.pack "/entries"
+                      , reqLogin = Nothing
+                      , reqHeaders = [ (JSS.pack "Content-Type", JSS.pack "application/json") ]
+                      , reqWithCredentials = False
+                      , reqData = StringData $ JSS.pack $ unpack $ encode entry
                       }
