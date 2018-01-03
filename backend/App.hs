@@ -1,9 +1,10 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE TypeApplications  #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE RecordWildCards       #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module App where
 
@@ -62,14 +63,19 @@ app pool =
             serveDirectory "backend/static"
 
         serverRouteHandlers = do
-            entries <- liftIO $ getEntries pool
+            entries <- getEntries pool
             pure $ HtmlPage $ viewModel (initialModel entries)
 
         entryHandlers =
-            liftIO $ getEntries pool
+            getEntries pool :<|> storeEntry pool
+
+storeEntry pool Entry{..} =
+    liftIO $ flip runSqlPersistMPool pool $ do
+        insert $ DbEntry description completed editing eid focussed
+        return ()
 
 getEntries pool =
-    flip runSqlPersistMPool pool $ do
+    liftIO $ flip runSqlPersistMPool pool $ do
         entries <- selectList [] []
         return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries
 
