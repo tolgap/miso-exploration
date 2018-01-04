@@ -145,8 +145,8 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
     [ div_
         [ class_ "view" ]
         [ input_
-            [ class_ "toggle"
-            , type_ "checkbox"
+            [ type_ "checkbox"
+            , class_ "toggle"
             , checked_ completed
             , onClick $ Check eid (not completed)
             ] []
@@ -159,10 +159,10 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
             ] []
         ]
     , input_
-        [ class_ "edit"
-        , value_ description
+        [ value_ description
         , name_ "title"
         , id_ $ "todo-" <> S.pack (show eid)
+        , class_ "edit"
         , onInput $ UpdateEntry eid
         , onBlur $ EditingEntry eid False
         , onEnter $ EditingEntry eid False

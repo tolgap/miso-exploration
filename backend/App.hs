@@ -62,9 +62,11 @@ app pool =
         static =
             serveDirectory "backend/static"
 
-        serverRouteHandlers = do
-            entries <- getEntries pool
-            pure $ HtmlPage $ viewModel (initialModel entries)
+        serverRouteHandlers =
+            -- TODO: once server side hydration is fixed when rerendering on client side
+            -- we can enable rendering of entries on server side.
+            -- entries <- getEntries pool
+            pure $ HtmlPage $ viewModel (initialModel [])
 
         entryHandlers =
             getEntries pool :<|> storeEntry pool :<|> updateEntry pool
@@ -100,7 +102,7 @@ run =
 
 entityToEntry DbEntry{..} =
     Entry {
-        description = S.pack $ T.unpack dbEntryDescription,
+        description = dbEntryDescription,
         completed = dbEntryCompleted,
         editing = dbEntryEditing,
         eid = dbEntryEid,
