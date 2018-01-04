@@ -14,6 +14,7 @@ import           Data.Aeson                    hiding (Object)
 import           Data.Bool
 import           Data.ByteString.Lazy.Char8    (unpack)
 import qualified Data.JSString                 as JSS
+import           Data.List                     (find)
 import qualified Data.Map                      as M
 import           Data.Monoid
 import           Foundation
@@ -86,9 +87,10 @@ updateModel DeleteComplete model@Model{..} =
 updateModel (Check id' isCompleted) model@Model{..} =
    model { _entries = newEntries } <# eff
     where
+      eff :: IO Msg
       eff =
-        putStrLn "clicked check" >>
-          pure NoOp
+        maybe (return ()) patchEntry (findEntry id' newEntries)
+            >> pure NoOp
 
       newEntries =
         filterMap _entries (\t -> eid t == id') $ \t ->
@@ -118,6 +120,25 @@ filterMap xs predicate f = go' xs
     go' (y:ys)
      | predicate y = f y : go' ys
      | otherwise   = y : go' ys
+
+findEntry :: Int -> [Entry] -> Maybe Entry
+findEntry eid' =
+    find (\e -> eid e == eid')
+
+patchEntry :: Entry -> IO ()
+patchEntry entry = do
+    Just resp <- contents <$> xhrByteString req
+    case eitherDecodeStrict resp :: Either String () of
+        Left s  -> error s
+        Right _ -> pure ()
+    where
+        req = Request { reqMethod = PUT
+                      , reqURI = S.pack $ "/entries/" ++ show (eid entry)
+                      , reqLogin = Nothing
+                      , reqHeaders = [ (JSS.pack "Content-Type", JSS.pack "application/json") ]
+                      , reqWithCredentials = False
+                      , reqData = StringData $ JSS.pack $ unpack $ encode entry
+                      }
 
 getEntries :: IO [Entry]
 getEntries = do

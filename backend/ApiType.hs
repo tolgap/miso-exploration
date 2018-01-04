@@ -10,4 +10,5 @@ import           Foundation  (Entry)
 
 type EntryAPI = "entries" :> Get '[JSON] [Entry]
                 :<|> "entries" :> ReqBody '[JSON] Entry :> Post '[JSON] ()
+                :<|> "entries" :> Capture "id" Int :> ReqBody '[JSON] Entry :> Put '[JSON] ()
 type StaticAPI = "static" :> Raw

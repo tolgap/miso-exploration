@@ -67,11 +67,21 @@ app pool =
             pure $ HtmlPage $ viewModel (initialModel entries)
 
         entryHandlers =
-            getEntries pool :<|> storeEntry pool
+            getEntries pool :<|> storeEntry pool :<|> updateEntry pool
 
 storeEntry pool Entry{..} =
     liftIO $ flip runSqlPersistMPool pool $ do
         insert $ DbEntry description completed editing eid focussed
+        return ()
+
+updateEntry pool entryId Entry{..} =
+    liftIO $ flip runSqlPersistMPool pool $ do
+        updateWhere [DbEntryEid ==. entryId]
+            [ DbEntryDescription =. T.pack (S.unpack description)
+            , DbEntryCompleted =. completed
+            , DbEntryEditing =. editing
+            , DbEntryFocussed =. focussed
+            ]
         return ()
 
 getEntries pool =
