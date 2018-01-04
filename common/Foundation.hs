@@ -81,10 +81,13 @@ initialModel initialEntries = Model
   { _entries = initialEntries
   , _visibility = S.pack "All"
   , _field = mempty
-  , _uid = 0
+  , _uid = (+ 1) $ safeMaximum $ map eid initialEntries
   , _step = False
   , _uri = homeLink
   }
+
+safeMaximum [] = 0
+safeMaximum xs = maximum xs
 
 homeLink :: URI
 homeLink =
