@@ -37,10 +37,11 @@ newEntry desc eid = Entry
   }
 
 main :: IO ()
-main =
+main = do
+    entries <- getEntries
     miso App
-        { initialAction = FetchEntries
-        , model = initialModel []
+        { initialAction = NoOp
+        , model = initialModel entries
         , update = updateModel
         , view = viewModel
         , events = defaultEvents
