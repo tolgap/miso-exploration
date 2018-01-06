@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Build the client
-cd frontend && ./build
+# Build clientside frontend Miso app
+stack build --stack-yaml frontend/stack.yaml
+
+# Build serverside backend Miso/Servant
+stack build --stack-yaml backend/stack.yaml
 
 # Copy over the javascript
-rm ../backend/static/all.js
-cp $(stack path --local-install-root)/bin/frontend.jsexe/all.js ../backend/static/all.js
-cd ..
+rm backend/static/all.js
+cp $(stack path --stack-yaml frontend/stack.yaml --local-install-root)/bin/frontend.jsexe/all.js backend/static/all.js
 
-# Build the server
-cd backend && ./build && cd ..
