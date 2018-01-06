@@ -18,6 +18,8 @@ executable backend
         base < 5,
         containers,
         transformers,
+        resourcet,
+        resource-pool,
         miso,
         monad-logger,
         servant,

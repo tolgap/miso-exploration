@@ -2,5 +2,5 @@ resolver: lts-8.11
 packages:
   - '.'
 extra-deps:
-  - miso-0.10.0.0
+  - ../../../OpenSource/miso
   - aeson-1.1.1.0

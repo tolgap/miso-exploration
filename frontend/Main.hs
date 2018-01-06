@@ -79,7 +79,8 @@ updateModel (UpdateEntry id' task) model@Model{..} =
            t { description = task }
 
 updateModel (Delete id') model@Model{..} =
-  noEff model { _entries = filter (\t -> eid t /= id') _entries }
+  model { _entries = filter (\t -> eid t /= id') _entries } <# do
+      NoOp <$ deleteEntry id'
 
 updateModel DeleteComplete model@Model{..} =
   noEff model { _entries = filter (not . completed) _entries }
@@ -125,47 +126,37 @@ findEntry :: Int -> [Entry] -> Maybe Entry
 findEntry eid' =
     find (\e -> eid e == eid')
 
-patchEntry :: Entry -> IO ()
-patchEntry entry = do
-    Just resp <- contents <$> xhrByteString req
-    case eitherDecodeStrict resp :: Either String () of
-        Left s  -> error s
-        Right _ -> pure ()
+deleteEntry :: Int -> IO ()
+deleteEntry id' =
+    xhrRequest url DELETE NoData
     where
-        req = Request { reqMethod = PUT
-                      , reqURI = S.pack $ "/entries/" ++ show (eid entry)
-                      , reqLogin = Nothing
-                      , reqHeaders = [ (JSS.pack "Content-Type", JSS.pack "application/json") ]
-                      , reqWithCredentials = False
-                      , reqData = StringData $ JSS.pack $ unpack $ encode entry
-                      }
+        url = "/entries/" ++ show id'
+
+patchEntry :: Entry -> IO ()
+patchEntry entry =
+    xhrRequest url PUT data'
+    where
+        url = "/entries/" ++ show (eid entry)
+        data' = StringData $ JSS.pack $ unpack $ encode entry
 
 getEntries :: IO [Entry]
-getEntries = do
-    Just resp <- contents <$> xhrByteString req
-    case eitherDecodeStrict resp :: Either String [Entry] of
-        Left s  -> error s
-        Right j -> pure j
-    where
-        req = Request { reqMethod = GET
-                      , reqURI = S.pack "/entries"
-                      , reqLogin = Nothing
-                      , reqHeaders = []
-                      , reqWithCredentials = False
-                      , reqData = NoData
-                      }
+getEntries =
+    xhrRequest "/entries" GET NoData
 
 postEntry :: Entry -> IO ()
-postEntry entry = do
-    Just resp <- contents <$> xhrByteString req
-    case eitherDecodeStrict resp :: Either String () of
-        Left s  -> error s
-        Right _ -> pure ()
+postEntry entry =
+    xhrRequest "/entries" POST data'
     where
-        req = Request { reqMethod = POST
-                      , reqURI = S.pack "/entries"
+        data' = StringData $ JSS.pack $ unpack $ encode entry
+
+xhrRequest url method' reqData' = do
+    Just resp <- contents <$> xhrByteString req
+    either error pure (eitherDecodeStrict resp)
+    where
+        req = Request { reqMethod = method'
+                      , reqURI = S.pack url
                       , reqLogin = Nothing
                       , reqHeaders = [ (JSS.pack "Content-Type", JSS.pack "application/json") ]
                       , reqWithCredentials = False
-                      , reqData = StringData $ JSS.pack $ unpack $ encode entry
+                      , reqData = reqData'
                       }
