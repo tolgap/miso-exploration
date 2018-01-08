@@ -95,14 +95,15 @@ updateModel (Check id' isCompleted) model@Model{..} =
       eff =
         maybe (return ()) patchEntry (findEntry id' newEntries)
             >> pure NoOp
-
       newEntries =
         filterMap _entries (\t -> eid t == id') $ \t ->
           t { completed = isCompleted }
 
 updateModel (CheckAll isCompleted) model@Model{..} =
-  noEff model { _entries = newEntries }
+  Effect (model { _entries = newEntries }) effs
     where
+      effs =
+        map (\e -> pure $ Check (eid e) (completed e)) newEntries
       newEntries =
         filterMap _entries (const True) $
           \t -> t { completed = isCompleted }
