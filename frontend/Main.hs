@@ -83,15 +83,11 @@ updateModel (Delete id') model@Model{..} =
       NoOp <$ deleteEntry id'
 
 updateModel DeleteComplete model@Model{..} =
-  Effect (model { _entries = filter (not . completed) _entries }) effs
-    where
-        effs =
-            map (pure . Delete . eid) (filter completed _entries)
+  foldl (\eff entry -> eff >>= updateModel (Delete $ eid entry)) (Effect model []) (filter completed _entries)
 
 updateModel (Check id' isCompleted) model@Model{..} =
    model { _entries = newEntries } <# eff
     where
-      eff :: IO Msg
       eff =
         maybe (return ()) patchEntry (findEntry id' newEntries)
             >> pure NoOp
@@ -100,13 +96,7 @@ updateModel (Check id' isCompleted) model@Model{..} =
           t { completed = isCompleted }
 
 updateModel (CheckAll isCompleted) model@Model{..} =
-  Effect (model { _entries = newEntries }) effs
-    where
-      effs =
-        map (\e -> pure $ Check (eid e) (completed e)) newEntries
-      newEntries =
-        filterMap _entries (const True) $
-          \t -> t { completed = isCompleted }
+  foldl (\eff entry -> eff >>= updateModel (Check (eid entry) isCompleted)) (Effect model []) _entries
 
 updateModel (ChangeVisibility v) model =
   noEff model { _visibility = v }
