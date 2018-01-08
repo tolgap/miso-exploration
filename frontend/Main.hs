@@ -63,7 +63,7 @@ updateModel Add model@Model{..} =
             NoOp <$ postEntry (newEntry _field _uid)
 
 updateModel (UpdateField str) model = noEff model { _field = str }
-updateModel (EditingEntry id' isEditing) model@Model{..} =
+updateModel (EditingEntry isEditing id') model@Model{..} =
   model { _entries = newEntries } <# do
     focus $ S.pack $ "todo-" ++ show id'
     pure NoOp
@@ -71,7 +71,7 @@ updateModel (EditingEntry id' isEditing) model@Model{..} =
       newEntries = filterMap _entries (\t -> eid t == id') $
          \t -> t { editing = isEditing, focussed = isEditing }
 
-updateModel (UpdateEntry id' task) model@Model{..} =
+updateModel (UpdateEntry task id') model@Model{..} =
   noEff model { _entries = newEntries }
     where
       newEntries =
@@ -85,7 +85,7 @@ updateModel (Delete id') model@Model{..} =
 updateModel DeleteComplete model@Model{..} =
   foldl (\eff entry -> eff >>= updateModel (Delete $ eid entry)) (Effect model []) (filter completed _entries)
 
-updateModel (Check id' isCompleted) model@Model{..} =
+updateModel (Check isCompleted id') model@Model{..} =
    model { _entries = newEntries } <# eff
     where
       eff =

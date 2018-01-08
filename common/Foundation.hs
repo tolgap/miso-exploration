@@ -34,12 +34,12 @@ data Msg
   = NoOp
   | CurrentTime Int
   | UpdateField MisoString
-  | EditingEntry Int Bool
-  | UpdateEntry Int MisoString
+  | EditingEntry Bool Int
+  | UpdateEntry MisoString Int
   | Add
   | Delete Int
   | DeleteComplete
-  | Check Int Bool
+  | Check Bool Int
   | CheckAll Bool
   | ChangeVisibility MisoString
   | FetchEntries
@@ -151,10 +151,10 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
             [ type_ "checkbox"
             , class_ "toggle"
             , checked_ completed
-            , onClick $ Check eid (not completed)
+            , onClick $ Check (not completed) eid 
             ] []
         , label_
-            [ onDoubleClick $ EditingEntry eid True ]
+            [ onDoubleClick $ EditingEntry True eid ]
             [ text description ]
         , button_
             [ class_ "destroy"
@@ -166,9 +166,9 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
         , name_ "title"
         , id_ $ "todo-" <> S.pack (show eid)
         , class_ "edit"
-        , onInput $ UpdateEntry eid
-        , onBlur $ EditingEntry eid False
-        , onEnter $ EditingEntry eid False
+        , onInput $ flip UpdateEntry eid
+        , onBlur $ EditingEntry False eid
+        , onEnter $ EditingEntry False eid
         ]
         []
     ]
