@@ -83,7 +83,7 @@ updateModel (Delete id') model@Model{..} =
       NoOp <$ deleteEntry id'
 
 updateModel DeleteComplete model@Model{..} =
-  foldl (\eff entry -> eff >>= updateModel (Delete $ eid entry)) (Effect model []) (filter completed _entries)
+  Effect model $ map (pure . Delete . eid) (filter completed _entries)
 
 updateModel (Check isCompleted id') model@Model{..} =
    model { _entries = newEntries } <# eff
@@ -96,7 +96,7 @@ updateModel (Check isCompleted id') model@Model{..} =
           t { completed = isCompleted }
 
 updateModel (CheckAll isCompleted) model@Model{..} =
-  foldl (\eff entry -> eff >>= updateModel (Check (eid entry) isCompleted)) (Effect model []) _entries
+  Effect model $ map (pure . Check isCompleted . eid) _entries
 
 updateModel (ChangeVisibility v) model =
   noEff model { _visibility = v }
