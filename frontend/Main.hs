@@ -83,7 +83,10 @@ updateModel (Delete id') model@Model{..} =
       NoOp <$ deleteEntry id'
 
 updateModel DeleteComplete model@Model{..} =
-  noEff model { _entries = filter (not . completed) _entries }
+  Effect (model { _entries = filter (not . completed) _entries }) effs
+    where
+        effs =
+            map (pure . Delete . eid) (filter completed _entries)
 
 updateModel (Check id' isCompleted) model@Model{..} =
    model { _entries = newEntries } <# eff
