@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Build clientside frontend Miso app
-stack build --stack-yaml frontend/stack.yaml
+stack build --fast --stack-yaml stack-ghcjs.yaml
 
 # Build serverside backend Miso/Servant
-stack build --stack-yaml backend/stack.yaml
+stack build --fast --stack-yaml stack.yaml
 
 # Copy over the javascript
 rm backend/static/all.js
-cp $(stack path --stack-yaml frontend/stack.yaml --local-install-root)/bin/frontend.jsexe/all.js backend/static/all.js
+cp $(stack path --stack-yaml stack-ghcjs.yaml --local-install-root)/bin/frontend.jsexe/all.js backend/static/all.js
 

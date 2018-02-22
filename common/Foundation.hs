@@ -151,7 +151,7 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
             [ type_ "checkbox"
             , class_ "toggle"
             , checked_ completed
-            , onClick $ Check (not completed) eid 
+            , onClick $ Check (not completed) eid
             ] []
         , label_
             [ onDoubleClick $ EditingEntry True eid ]

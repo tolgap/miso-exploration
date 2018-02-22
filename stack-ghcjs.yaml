@@ -8,9 +8,9 @@ setup-info:
         url: https://github.com/matchwood/ghcjs-stack-dist/raw/master/ghcjs-0.2.1.9008011.tar.gz
         sha1: a72a5181124baf64bcd0e68a8726e65914473b3b
 packages:
-  - '..'
-  - '../../ghcjs-base'
+  - '.'
+  - '../ghcjs-base'
 
 extra-deps:
-  - ../../../OpenSource/miso
+  - ../../OpenSource/miso
   - aeson-1.1.1.0
