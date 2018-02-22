@@ -27,12 +27,12 @@ import           Miso
 import           Miso.String         (MisoString)
 import qualified Miso.String         as S
 import           Servant.API
-import           Servant.Utils.Links
 import           System.IO.Unsafe    (unsafePerformIO)
 
 data Msg
   = NoOp
-  | CurrentTime Int
+  | HandleURIChange URI
+  | ChangeURI URI
   | UpdateField MisoString
   | EditingEntry Bool Int
   | UpdateEntry MisoString Int
@@ -48,6 +48,7 @@ data Msg
 
 data Model = Model
   { _entries    :: [Entry]
+  , _currentURI :: URI
   , _field      :: MisoString
   , _uid        :: Int
   , _visibility :: MisoString
@@ -68,17 +69,19 @@ makeLenses ''Model
 instance ToJSON Entry
 instance FromJSON Entry
 
--- Currently doing 1 route, and handling changes inside Miso.
-type ClientRoutes = Home
-type Home = View Msg
+type ClientRoutes = Home :<|> Active :<|> Completed
+type Home = "" :> View Msg
+type Active = "active" :> View Msg
+type Completed = "completed" :> View Msg
 
 debugLog :: (Show a) => a -> a
 debugLog x =
     let !_ = unsafePerformIO (print x) in x
 
-initialModel :: [Entry] -> Model
-initialModel initialEntries = Model
+initialModel :: [Entry] -> URI -> Model
+initialModel initialEntries currentURI' = Model
   { _entries = initialEntries
+  , _currentURI = currentURI'
   , _visibility = S.pack "All"
   , _field = mempty
   , _uid = (+ 1) $ safeMaximum $ map eid initialEntries
@@ -86,12 +89,21 @@ initialModel initialEntries = Model
   , _uri = homeLink
   }
 
+safeMaximum :: (Ord t, Num t) => [t] -> t
 safeMaximum [] = 0
 safeMaximum xs = maximum xs
 
 homeLink :: URI
 homeLink =
     safeLink (Proxy @ClientRoutes) (Proxy @Home)
+
+activeLink :: URI
+activeLink =
+    safeLink (Proxy @ClientRoutes) (Proxy @Active)
+
+completedLink :: URI
+completedLink =
+    safeLink (Proxy @ClientRoutes) (Proxy @Completed)
 
 viewModel :: Model -> View Msg
 viewModel m@Model{..} =
@@ -103,7 +115,7 @@ viewModel m@Model{..} =
         [ class_ "todoapp" ]
         [ viewInput m _field
         , viewEntries _visibility _entries
-        , viewControls m _visibility _entries
+        , viewControls _currentURI _entries
         ]
     , infoFooter
     ]
@@ -173,14 +185,14 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
         []
     ]
 
-viewControls :: Model ->  MisoString -> [ Entry ] -> View Msg
-viewControls model visibility entries =
+viewControls :: URI -> [ Entry ] -> View Msg
+viewControls uri entries =
   footer_  [ class_ "footer"
            , hidden_ (null entries)
            ]
       [ viewControlsCount entriesLeft
-      , viewControlsFilters visibility
-      , viewControlsClear model entriesCompleted
+      , viewControlsFilters uri
+      , viewControlsClear entriesCompleted
       ]
   where
     entriesCompleted = length . filter completed $ entries
@@ -195,28 +207,28 @@ viewControlsCount entriesLeft =
   where
     item_ = S.pack $ bool " items" " item" (entriesLeft == 1)
 
-viewControlsFilters :: MisoString -> View Msg
-viewControlsFilters visibility =
+viewControlsFilters :: URI -> View Msg
+viewControlsFilters currentURI =
   ul_
     [ class_ "filters" ]
-    [ visibilitySwap "#/" "All" visibility
+    [ visibilitySwap "All" homeLink currentURI
     , text " "
-    , visibilitySwap "#/active" "Active" visibility
+    , visibilitySwap "Active" activeLink currentURI
     , text " "
-    , visibilitySwap "#/completed" "Completed" visibility
+    , visibilitySwap "Completed" completedLink currentURI
     ]
 
-visibilitySwap :: MisoString -> MisoString -> MisoString -> View Msg
-visibilitySwap uri visibility actualVisibility =
+visibilitySwap :: MisoString -> URI -> URI -> View Msg
+visibilitySwap visibility' uri currentURI' =
   li_ [  ]
-      [ a_ [ href_ uri
-           , class_ $ S.concat [ "selected" | visibility == actualVisibility ]
-           , onClick (ChangeVisibility visibility)
-           ] [ text visibility ]
+      [ a_ [ href_ (S.pack $ show uri)
+           , class_ $ S.concat [ "selected" | uri == currentURI' ]
+           , onClick (ChangeURI uri)
+           ] [ text visibility' ]
       ]
 
-viewControlsClear :: Model -> Int -> View Msg
-viewControlsClear _ entriesCompleted =
+viewControlsClear :: Int -> View Msg
+viewControlsClear entriesCompleted =
   button_
     [ class_ "clear-completed"
     , prop "hidden" (entriesCompleted == 0)

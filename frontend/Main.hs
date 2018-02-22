@@ -38,21 +38,31 @@ newEntry desc eid = Entry
 
 main :: IO ()
 main = do
+    currentURI <- getCurrentURI
     entries <- getEntries
     miso App
         { initialAction = NoOp
-        , model = initialModel entries
+        , model = initialModel entries currentURI
         , update = updateModel
         , view = viewModel
         , events = defaultEvents
-        , subs = []
+        , subs = [ Miso.uriSub HandleURIChange ]
         , mountPoint = Nothing
         }
 
 updateModel :: Msg -> Model -> Effect Msg Model
 updateModel NoOp m = noEff m
-updateModel (CurrentTime n) m =
-  m <# (print n >> pure NoOp)
+updateModel (ChangeURI uri) model =
+    fromTransition (scheduleIO $ do
+        pushURI uri
+        pure NoOp) model
+
+updateModel (HandleURIChange uri) model =
+    model
+        { _currentURI = uri }
+        <# do
+            pure NoOp
+
 updateModel Add model@Model{..} =
     model
         {
@@ -105,8 +115,8 @@ updateModel FetchEntries model =
     model <# do
         EntriesResult <$> getEntries
 
-updateModel (EntriesResult newEntries) model =
-    noEff $ initialModel newEntries
+updateModel (EntriesResult newEntries) model@Model{..} =
+    noEff $ initialModel newEntries _currentURI
 
 filterMap :: [a] -> (a -> Bool) -> (a -> a) -> [a]
 filterMap xs predicate f = go' xs

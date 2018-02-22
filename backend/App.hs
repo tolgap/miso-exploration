@@ -13,7 +13,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Logger         (NoLoggingT, runStderrLoggingT)
 import           Control.Monad.Trans.Except   (ExceptT)
 import           Control.Monad.Trans.Reader   (ReaderT)
-import           Control.Monad.Trans.Resource (MonadBaseControl, ResourceT)
+import           Control.Monad.Trans.Resource (ResourceT)
 import           Data.Pool                    (Pool)
 import           Data.Proxy
 import           Data.Text                    as T
@@ -23,19 +23,17 @@ import           Database.Persist.Sqlite
 import           Foundation
 import qualified Lucid                        as L
 import qualified Lucid.Base                   as L
-import           Miso                         (ToServerRoutes)
+import           Miso                         (ToServerRoutes, View)
 import qualified Miso.String                  as S
 import           Models
-import           Network.Wai
 import           Network.Wai.Handler.Warp     as Warp
 import           Servant
-import           Servant.HTML.Lucid
 
 newtype HtmlPage a = HtmlPage a
     deriving (Show, Eq)
 
 type ServerAPI =
-    ServerRoutes :<|> StaticAPI :<|> EntryAPI
+    ServerRoutes :<|> EntryAPI :<|> StaticAPI
 
 type ServerRoutes =
     ToServerRoutes ClientRoutes HtmlPage Msg
@@ -74,23 +72,32 @@ dbHandler :: ReaderT SqlBackend (NoLoggingT (ResourceT IO)) a -> ExceptT Servant
 dbHandler =
     liftIO  . runDB
 
+app :: Application
 app =
-    serve (Proxy @ServerAPI) (serverRouteHandlers :<|> static :<|> entryHandlers)
+    serve (Proxy @ServerAPI)
+        (    serverHandlers
+        :<|> entryHandlers
+        :<|> static
+        )
     where
         static =
             serveDirectory "backend/static"
 
-        serverRouteHandlers = do
-            entries <- getEntries
-            return $ HtmlPage $ viewModel $ initialModel entries
+        serverHandlers = do
+            serverPage homeLink :<|> serverPage activeLink :<|> serverPage completedLink
 
         entryHandlers =
             getEntries :<|> storeEntry :<|> updateEntry :<|> deleteEntry
 
+serverPage :: URI -> ExceptT ServantErr IO (HtmlPage (View Msg))
+serverPage link = do
+    entries' <- getEntries
+    return $ HtmlPage $ viewModel $ initialModel entries' link
+
 storeEntry :: Entry -> ExceptT ServantErr IO ()
 storeEntry Entry{..} =
     dbHandler $ do
-        insert $ DbEntry description completed editing eid focussed
+        _ <- insert $ DbEntry description completed editing eid focussed
         return ()
 
 updateEntry :: Int -> Entry -> ExceptT ServantErr IO ()
@@ -107,15 +114,16 @@ updateEntry entryId Entry{..} =
 deleteEntry :: Int -> ExceptT ServantErr IO ()
 deleteEntry entryId =
     dbHandler $ do
-        deleteWhere [DbEntryEid ==. entryId]
+        _ <- deleteWhere [DbEntryEid ==. entryId]
         return ()
 
 getEntries :: ExceptT ServantErr IO [Entry]
 getEntries =
     dbHandler $ do
-        entries <- selectList [] []
-        return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries
+        entries' <- selectList [] []
+        return $ Prelude.map (\(Entity _ e) -> entityToEntry e) entries'
 
+mkApp :: IO Application
 mkApp = do
     runDB (runMigration migrateAll)
     return app
@@ -124,6 +132,7 @@ run :: IO ()
 run =
     Warp.run 3000 =<< mkApp
 
+entityToEntry :: DbEntry -> Entry
 entityToEntry DbEntry{..} =
     Entry {
         description = dbEntryDescription,
