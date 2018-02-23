@@ -235,11 +235,13 @@ viewControlsFilters currentURI =
 visibilitySwap :: MisoString -> URI -> URI -> View Msg
 visibilitySwap visibility' uri currentURI' =
   li_ [  ]
-      [ a_ [ href_ (S.pack $ show uri)
+      [ a_ [ href_ (S.pack href)
            , class_ $ S.concat [ "selected" | uri == currentURI' ]
            , onClick (ChangeURI uri)
            ] [ text visibility' ]
       ]
+  where
+    href = "/" ++ show uri
 
 viewControlsClear :: Int -> View Msg
 viewControlsClear entriesCompleted =
