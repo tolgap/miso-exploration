@@ -41,7 +41,6 @@ data Msg
   | DeleteComplete
   | Check Bool Int
   | CheckAll Bool
-  | ChangeVisibility MisoString
   | FetchEntries
   | EntriesResult [Entry]
    deriving Show
@@ -51,7 +50,6 @@ data Model = Model
   , _currentURI :: URI
   , _field      :: MisoString
   , _uid        :: Int
-  , _visibility :: MisoString
   , _step       :: Bool
   , _uri        :: URI
   } deriving (Show, Generic, Eq)
@@ -82,7 +80,6 @@ initialModel :: [Entry] -> URI -> Model
 initialModel initialEntries currentURI' = Model
   { _entries = initialEntries
   , _currentURI = currentURI'
-  , _visibility = S.pack "All"
   , _field = mempty
   , _uid = (+ 1) $ safeMaximum $ map eid initialEntries
   , _step = False

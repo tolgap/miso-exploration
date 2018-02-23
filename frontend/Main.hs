@@ -102,9 +102,6 @@ updateModel (Check isCompleted id') model@Model{..} =
 updateModel (CheckAll isCompleted) model@Model{..} =
   Effect model $ map (pure . Check isCompleted . eid) _entries
 
-updateModel (ChangeVisibility v) model =
-  noEff model { _visibility = v }
-
 updateModel FetchEntries model =
     model <# do
         EntriesResult <$> getEntries
