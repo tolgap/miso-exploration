@@ -70,7 +70,7 @@ instance ToJSON Entry
 instance FromJSON Entry
 
 type ClientRoutes = Home :<|> Active :<|> Completed
-type Home = "" :> View Msg
+type Home = View Msg
 type Active = "active" :> View Msg
 type Completed = "completed" :> View Msg
 
@@ -106,7 +106,23 @@ completedLink =
     safeLink (Proxy @ClientRoutes) (Proxy @Completed)
 
 viewModel :: Model -> View Msg
-viewModel m@Model{..} =
+viewModel model =
+    case runRoute (Proxy @ClientRoutes) viewTree model of
+        Left _routingError -> page404View
+        Right r -> r
+
+page404View :: View Msg
+page404View =
+    text "Yo, 404, page unknown. Go to /. Shoo!"
+
+viewTree
+    ::       (Model -> View Msg)
+        :<|> (Model -> View Msg)
+        :<|> (Model -> View Msg)
+viewTree = viewPage :<|> viewPage :<|> viewPage
+
+viewPage :: Model -> View Msg
+viewPage m@Model{..} =
  div_
     [ class_ "todomvc-wrapper"
     , style_  $ M.singleton "visibility" "hidden"
@@ -114,14 +130,14 @@ viewModel m@Model{..} =
     [ section_
         [ class_ "todoapp" ]
         [ viewInput m _field
-        , viewEntries _visibility _entries
+        , viewEntries _currentURI _entries
         , viewControls _currentURI _entries
         ]
     , infoFooter
     ]
 
-viewEntries :: MisoString -> [ Entry ] -> View Msg
-viewEntries visibility entries =
+viewEntries :: URI -> [ Entry ] -> View Msg
+viewEntries currentURI' entries =
   section_
     [ class_ "main"
     , style_ $ M.singleton "visibility" cssVisibility
@@ -144,10 +160,11 @@ viewEntries visibility entries =
     cssVisibility = bool "visible" "hidden" (null entries)
     allCompleted = all (==True) $ completed <$> entries
     isVisible Entry {..} =
-      case visibility of
-        "Completed" -> completed
-        "Active"    -> not completed
-        _           -> True
+      if currentURI' == activeLink
+        then not completed
+      else if currentURI' == completedLink
+        then completed
+      else True
 
 viewKeyedEntry :: Entry -> View Msg
 viewKeyedEntry = viewEntry
@@ -268,3 +285,6 @@ infoFooter =
         , a_ [ href_ "http://todomvc.com" ] [ text "TodoMVC" ]
         ]
     ]
+
+instance HasURI Model where
+    lensURI = uri

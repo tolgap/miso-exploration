@@ -26,7 +26,8 @@ import qualified Lucid.Base                   as L
 import           Miso                         (ToServerRoutes, View)
 import qualified Miso.String                  as S
 import           Models
-import           Network.Wai.Handler.Warp     as Warp
+import           Network.Wai.Handler.Warp     as Wai
+import qualified Network.Wai.Middleware.RequestLogger as Wai
 import           Servant
 
 newtype HtmlPage a = HtmlPage a
@@ -129,8 +130,10 @@ mkApp = do
     return app
 
 run :: IO ()
-run =
-    Warp.run 3000 =<< mkApp
+run = do
+    app' <- mkApp
+    putStrLn "Running on port 3000"
+    Wai.run 3000 $ Wai.logStdout app'
 
 entityToEntry :: DbEntry -> Entry
 entityToEntry DbEntry{..} =

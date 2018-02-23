@@ -24,9 +24,6 @@ import           Miso
 import           Miso.String                   (MisoString)
 import qualified Miso.String                   as S
 
-instance HasURI Model where
-    lensURI = uri
-
 newEntry :: MisoString -> Int -> Entry
 newEntry desc eid = Entry
   { description = desc
@@ -56,13 +53,11 @@ updateModel (ChangeURI uri) model =
     fromTransition (scheduleIO $ do
         pushURI uri
         pure NoOp) model
-
 updateModel (HandleURIChange uri) model =
     model
         { _currentURI = uri }
         <# do
             pure NoOp
-
 updateModel Add model@Model{..} =
     model
         {
@@ -71,7 +66,6 @@ updateModel Add model@Model{..} =
         , _entries = _entries <> [ newEntry _field _uid ]
         } <# do
             NoOp <$ postEntry (newEntry _field _uid)
-
 updateModel (UpdateField str) model = noEff model { _field = str }
 updateModel (EditingEntry isEditing id') model@Model{..} =
   model { _entries = newEntries } <# do
