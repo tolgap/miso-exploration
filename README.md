@@ -14,7 +14,7 @@ Make sure you have [Stack](https://docs.haskellstack.org/en/stable/README/) inst
 Run the following command to setup GHC for our backend:
 
 ```
-stack setup --stack-yaml backend/stack.yaml
+stack setup
 ```
 
 ### Frontend
@@ -22,17 +22,17 @@ stack setup --stack-yaml backend/stack.yaml
 Run the following command to setup GHCJS for our frontend
 
 ```
-stack setup --stack-yaml frontend/stack.yaml
+stack setup --stack-yaml stack-ghcjs.yaml
 ```
 
-### Compiling
+## Compiling
 
 Use the build command to compile both the backend and frontend. And then we can launch the application.
 The backend will serve the frontend JS.
 
 ```
 ./build
-stack exec backend --stack-yaml backend/stack.yaml
+stack exec backend
 ```
 
 And then visit [localhost:3000](http://localhost:3000) to view the application.
