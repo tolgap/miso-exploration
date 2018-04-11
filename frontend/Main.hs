@@ -24,6 +24,9 @@ import           Miso
 import           Miso.String                   (MisoString)
 import qualified Miso.String                   as S
 
+batchEff :: model -> [IO action] -> Effect action model
+batchEff m actions = Effect m (map (\a -> \sink -> a >>= sink) actions)
+
 newEntry :: MisoString -> Int -> Entry
 newEntry desc eid = Entry
   { description = desc
@@ -87,7 +90,7 @@ updateModel (Delete id') model@Model{..} =
       NoOp <$ deleteEntry id'
 
 updateModel DeleteComplete model@Model{..} =
-  Effect model $ map (pure . Delete . eid) (filter completed _entries)
+  batchEff model $ map (pure . Delete . eid) (filter completed _entries)
 
 updateModel (Check isCompleted id') model@Model{..} =
    model { _entries = newEntries } <# eff
@@ -100,7 +103,7 @@ updateModel (Check isCompleted id') model@Model{..} =
           t { completed = isCompleted }
 
 updateModel (CheckAll isCompleted) model@Model{..} =
-  Effect model $ map (pure . Check isCompleted . eid) _entries
+  batchEff model $ map (pure . Check isCompleted . eid) _entries
 
 updateModel FetchEntries model =
     model <# do
