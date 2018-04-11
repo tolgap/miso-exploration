@@ -8,9 +8,7 @@ cabal-version:       >=1.10
 executable backend
     main-is: Main.hs
 
-    if impl(ghcjs)
-        buildable: False
-    else
+    if !impl(ghcjs)
         ghc-options:
             -O2 -threaded -Wall
         hs-source-dirs: backend, common
@@ -45,6 +43,8 @@ executable backend
 
         default-language:
             Haskell2010
+    else
+        buildable: False
 
 executable frontend
     main-is: Main.hs
