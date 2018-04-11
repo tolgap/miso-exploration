@@ -24,6 +24,7 @@ import           GHC.Generics
 import           Miso
 import           Miso.String      (MisoString)
 import qualified Miso.String      as S
+import           Network.URI      (pathSegments)
 import           Servant.API
 import           System.IO.Unsafe (unsafePerformIO)
 
@@ -153,9 +154,9 @@ viewEntries currentURI' entries =
     cssVisibility = bool "visible" "hidden" (null entries)
     allCompleted = all (==True) $ completed <$> entries
     isVisible Entry {..} =
-      if currentURI' == activeLink
+      if pathSegments currentURI' == pathSegments activeLink
         then not completed
-      else if currentURI' == completedLink
+      else if pathSegments currentURI' == pathSegments completedLink
         then completed
       else True
 

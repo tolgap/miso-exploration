@@ -26,6 +26,7 @@ executable backend
             transformers,
             resourcet,
             resource-pool,
+            network-uri,
             miso,
             monad-logger,
             servant,
@@ -61,6 +62,7 @@ executable frontend
             ghcjs-base,
             bytestring,
             containers,
+            network-uri,
             lens,
             servant,
             miso
