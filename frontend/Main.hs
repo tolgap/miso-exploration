@@ -35,17 +35,17 @@ newEntry desc eid = Entry
 
 main :: IO ()
 main = do
-    currentURI <- getCurrentURI
     entries <- getEntries
-    miso App
-        { initialAction = NoOp
-        , model = initialModel entries currentURI
-        , update = updateModel
-        , view = viewModel
-        , events = defaultEvents
-        , subs = [ Miso.uriSub HandleURIChange ]
-        , mountPoint = Nothing
-        }
+    miso $ \currentURI ->
+        App
+            { initialAction = NoOp
+            , model = initialModel entries currentURI
+            , update = updateModel
+            , view = viewModel
+            , events = defaultEvents
+            , subs = [ Miso.uriSub HandleURIChange ]
+            , mountPoint = Nothing
+            }
 
 updateModel :: Msg -> Model -> Effect Msg Model
 updateModel NoOp m = noEff m

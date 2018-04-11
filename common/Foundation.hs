@@ -9,25 +9,23 @@
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
 module Foundation where
 
-import           Control.Lens
-import           Data.Aeson          hiding (Object)
+import           Data.Aeson       hiding (Object)
 import           Data.Bool
-import qualified Data.Map            as M
+import qualified Data.Map         as M
 import           Data.Monoid
 import           Data.Proxy
 import           GHC.Generics
 import           Miso
-import           Miso.String         (MisoString)
-import qualified Miso.String         as S
+import           Miso.String      (MisoString)
+import qualified Miso.String      as S
 import           Servant.API
-import           System.IO.Unsafe    (unsafePerformIO)
+import           System.IO.Unsafe (unsafePerformIO)
 
 data Msg
   = NoOp
@@ -61,8 +59,6 @@ data Entry = Entry
     , eid         :: Int
     , focussed    :: Bool
 } deriving (Show, Generic, Eq)
-
-makeLenses ''Model
 
 instance ToJSON Entry
 instance FromJSON Entry
@@ -104,9 +100,9 @@ completedLink =
 
 viewModel :: Model -> View Msg
 viewModel model =
-    case runRoute (Proxy @ClientRoutes) viewTree model of
+    case runRoute (Proxy @ClientRoutes) viewTree _currentURI model of
         Left _routingError -> page404View
-        Right r -> r
+        Right r            -> r
 
 page404View :: View Msg
 page404View =
@@ -145,7 +141,7 @@ viewEntries currentURI' entries =
         , name_ "toggle"
         , checked_ allCompleted
         , onClick $ CheckAll (not allCompleted)
-        ] []
+        ]
       , label_
         [ for_ "toggle-all" ]
           [ text $ S.pack "Mark all as complete" ]
@@ -178,7 +174,7 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
             , class_ "toggle"
             , checked_ completed
             , onClick $ Check (not completed) eid
-            ] []
+            ]
         , label_
             [ onDoubleClick $ EditingEntry True eid ]
             [ text description ]
@@ -196,7 +192,6 @@ viewEntry Entry {..} = liKeyed_ (toKey eid)
         , onBlur $ EditingEntry False eid
         , onEnter $ EditingEntry False eid
         ]
-        []
     ]
 
 viewControls :: URI -> [ Entry ] -> View Msg
@@ -264,7 +259,7 @@ viewInput _ task =
         , name_ "newTodo"
         , onInput UpdateField
         , onEnter Add
-        ] []
+        ]
     ]
 
 onEnter :: Msg -> Attribute Msg
@@ -284,6 +279,3 @@ infoFooter =
         , a_ [ href_ "http://todomvc.com" ] [ text "TodoMVC" ]
         ]
     ]
-
-instance HasURI Model where
-    lensURI = uri

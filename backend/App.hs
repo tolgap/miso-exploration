@@ -8,25 +8,26 @@
 
 module App where
 
-import           ApiType                      (EntryAPI, StaticAPI)
+import           ApiType                              (EntryAPI, StaticAPI)
 import           Control.Monad.IO.Class
-import           Control.Monad.Logger         (NoLoggingT, runStderrLoggingT)
-import           Control.Monad.Trans.Except   (ExceptT)
-import           Control.Monad.Trans.Reader   (ReaderT)
-import           Control.Monad.Trans.Resource (ResourceT)
-import           Data.Pool                    (Pool)
+import           Control.Monad.Logger                 (NoLoggingT,
+                                                       runStderrLoggingT)
+import           Control.Monad.Trans.Except           (ExceptT)
+import           Control.Monad.Trans.Reader           (ReaderT)
+import           Control.Monad.Trans.Resource         (ResourceT)
+import           Data.Pool                            (Pool)
 import           Data.Proxy
-import           Data.Text                    as T
+import           Data.Text                            as T
 import           Database.Persist
-import           Database.Persist.Sql         hiding (SqlBackend)
+import           Database.Persist.Sql                 hiding (SqlBackend)
 import           Database.Persist.Sqlite
 import           Foundation
-import qualified Lucid                        as L
-import qualified Lucid.Base                   as L
-import           Miso                         (ToServerRoutes, View)
-import qualified Miso.String                  as S
+import qualified Lucid                                as L
+import qualified Lucid.Base                           as L
+import           Miso                                 (ToServerRoutes, View)
+import qualified Miso.String                          as S
 import           Models
-import           Network.Wai.Handler.Warp     as Wai
+import           Network.Wai.Handler.Warp             as Wai
 import qualified Network.Wai.Middleware.RequestLogger as Wai
 import           Servant
 
