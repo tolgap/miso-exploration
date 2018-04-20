@@ -24,9 +24,6 @@ import           Miso
 import           Miso.String                   (MisoString)
 import qualified Miso.String                   as S
 
-batchEff :: model -> [IO action] -> Effect action model
-batchEff m actions = Effect m $ map (>>=) actions
-
 newEntry :: MisoString -> Int -> Entry
 newEntry desc eid = Entry
   { description = desc
